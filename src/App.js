@@ -1,23 +1,33 @@
-import logo from './logo.svg';
+import { useState } from 'react';
+import { CitySearch } from './components/citySearch/citySearch';
+import { ClimateDisplay } from './components/climateDisplay/climateDisplay';
+import { WEATHER_URL, WEATHER_KEY } from './api';
 import './App.css';
 
 function App() {
+  const [climateDisplay, setClimateDisplay] = useState(null);
+
+  const handleOnCitySearchChange = (searchData) => {
+    const [lat, lon] = searchData.value.split(' ');
+
+    const climateDisplayFetch = fetch(
+      `${WEATHER_URL}/weather?lat=${lat}&lon=${lon}&appid=${WEATHER_KEY}&units=metric`
+    );
+
+    Promise.all([climateDisplayFetch, weatherForecastFetch])
+      .then(async (response) => {
+        console.log(response);
+        const weatherResponse = await response[0].json();
+
+        setClimateDisplay({ city: searchData.label, ...weatherResponse });
+      })
+      .catch(console.log);
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className='container'>
+      <CitySearch onSearchChange={handleOnCitySearchChange} />
+      {climateDisplay && <ClimateDisplay data={climateDisplay} />}
     </div>
   );
 }
